@@ -1,5 +1,6 @@
 import logging
 import os
+import sys
 from datetime import datetime as dt
 from http import HTTPStatus
 
@@ -13,10 +14,14 @@ from exceptions import (EmptyListException, InvalidApiExc, InvalidJsonExc,
 load_dotenv()
 secret_token = os.getenv('API_TOKEN')
 
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+handler = logging.StreamHandler(sys.stdout)
+formatter = logging.Formatter(
+    '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
+handler.setFormatter(formatter)
+logger.addHandler(handler)
 
 CURRENCY_URL = 'https://www.cbr-xml-daily.ru/daily_json.js'
 VALUTE_LIST = [
@@ -33,19 +38,23 @@ def first_answer(update, context):
 
 
 def send_message(chat, context, message):
+    """Отправка сообщения."""
     try:
         context.bot.send_message(chat_id=chat.id, text=message)
-    except Exception:
-        pass
+        logger.info(f'Бот отпавил сообщение: {message}')
+    except Exception as error:
+        logger.error(f'Ошибка отправки сообщения: {error}')
 
 
 def get_api_answer():
+    """Проверка успешности запроса к API."""
     try:
         response = requests.get(CURRENCY_URL)
     except Exception as error:
         raise InvalidApiExc(f'Ошибка ответа API: {error}')
     status = response.status_code
     if status != HTTPStatus.OK:
+        logger.error(f'Ответ API: {status}')
         raise InvalidResponseExc(f'status_code: {status}')
     try:
         return response.json()
@@ -54,12 +63,13 @@ def get_api_answer():
 
 
 def check_data(data, context):
+    """Проверка корректности ответа API."""
     if 'Valute' not in data:
         raise InvalidApiExc('Некорректный ответ API - Отсутствует Valute')
-    if not context.args:
+    if not context:
         raise EmptyListException('Не указана валюта')
     # for i in range(len(context.args)):
-    charcode = context.args[0]
+    charcode = context
     if charcode not in VALUTE_LIST:
         raise InvalidValuteExc(
             f'Валюта {charcode} некорректна или не поддерживается')
@@ -74,6 +84,7 @@ def check_data(data, context):
 
 
 def corr_date(response):
+    """Перевод даты в нужный формат."""
     if 'Date' not in response:
         raise InvalidApiExc('Некорректный ответ API - Отсутствует Date')
     date_str = response.get('Date')[:10]
@@ -83,7 +94,8 @@ def corr_date(response):
 
 
 def parse_valute(currencies, context):
-    currency = currencies.get(context.args[0])
+    """Получение курса валюты и подготовка сообщения."""
+    currency = currencies.get(context)
     name = currency.get('CharCode')
     value = currency.get('Value')
     pr_value = currency.get('Previous')
@@ -96,43 +108,26 @@ def parse_valute(currencies, context):
 
 
 def currency_rate(update, context):
+    """Основная логика работы блока валюты ЦБ."""
     chat = update.effective_chat
-    try:
-        response = get_api_answer()
-        currencies = check_data(response, context)
-        currency = parse_valute(currencies, context)
-        date = corr_date(response)
-        message = (
-            f'На {date}: \n'
-            f'{currency}'
-        )
-        send_message(chat, context, message)
-    except Exception as error:
-        message = error
-        send_message(chat, context, message)
-# Не работает Exception!!!
-
-# def currency_rate(update, context):
-#     chat = update.effective_chat
-#     response = requests.get(CURRENCY_URL).json()
-#     currencies = response.get('Valute')
-#     currency = currencies.get(context.args[0])
-#     name = currency.get('CharCode')
-#     value = currency.get('Value')
-#     pr_value = currency.get('Previous')
-#     var = round(value - pr_value, 3)
-#     date_str = response.get('Date')[:10]
-#     correct_date = dt.strptime(date_str, '%Y-%m-%d')
-#     date = correct_date.strftime('%d.%m.%Y')
-#     message = (
-#         f'На {date}: \n'
-#         f'1 {name} = {value} RUB \n'
-#         f'Изменение за сутки: {var}'
-#     )
-#     context.bot.send_message(
-#         chat_id=chat.id,
-#         text=message
-#     )
+    for i in range(len(context.args)):
+        try:
+            logger.debug('Отправка запроса к API')
+            response = get_api_answer()
+            currencies = check_data(response, context.args[i])
+            currency = parse_valute(currencies, context.args[i])
+            date = corr_date(response)
+            message = (
+                f'На {date}: \n'
+                f'{currency}'
+            )
+            send_message(chat, context, message)
+        except (InvalidValuteExc, InvalidApiExc, Exception) as error:
+            message = f'Ошибка: {error}'
+            logger.error(f'Сбой в работе программы: {error}')
+            send_message(chat, context, message)
+        else:
+            logger.debug('Успешный запрос - нет исключений')
 
 
 def main():
