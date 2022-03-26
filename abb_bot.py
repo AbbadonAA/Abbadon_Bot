@@ -62,13 +62,33 @@ def get_api_answer():
         raise InvalidJsonExc(f'Ошибка декодирования JSON: {error}')
 
 
+def all_valutes(update, context):
+    chat = update.effective_chat
+    response = get_api_answer()
+    try:
+        valutes = response.get('Valute').keys()
+    except Exception as error:
+        logger.error(f'Получение ключей Valute: {error}')
+        raise InvalidApiExc(f'Некорректный ответ API - {error}')
+    valutes_name = response.get('Valute')
+    message_list = []
+    for valute in valutes:
+        try:
+            name = valutes_name.get(valute).get('Name')
+        except Exception as error:
+            logger.error(f'Не получен Name валюты: {error}')
+            raise InvalidApiExc(f'Проблемы с получением Name: {error}')
+        message_list.append(f'{valute} - {name}')
+    message = '\n'.join(message_list)
+    send_message(chat, context, message)
+
+
 def check_data(data, context):
     """Проверка корректности ответа API."""
     if 'Valute' not in data:
         raise InvalidApiExc('Некорректный ответ API - Отсутствует Valute')
     if not context:
         raise EmptyListException('Не указана валюта')
-    # for i in range(len(context.args)):
     charcode = context
     if charcode not in VALUTE_LIST:
         raise InvalidValuteExc(
@@ -132,6 +152,7 @@ def currency_rate(update, context):
 
 def main():
     updater = Updater(token=secret_token)
+    updater.dispatcher.add_handler(CommandHandler('valutes', all_valutes))
     updater.dispatcher.add_handler(CommandHandler('currency', currency_rate))
     updater.dispatcher.add_handler(MessageHandler(Filters.text, first_answer))
     updater.start_polling()
