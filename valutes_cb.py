@@ -1,13 +1,14 @@
 import logging
+import re
 import sys
 from datetime import datetime as dt
 from http import HTTPStatus
-import re
 
 import requests
-from send_message import send_message
+
 from exceptions import (EmptyListException, InvalidApiExc, InvalidJsonExc,
                         InvalidResponseExc, InvalidValuteExc, NotValuteExc)
+from send_message import send_message
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)

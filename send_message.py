@@ -1,7 +1,6 @@
 import logging
 import sys
 
-
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 handler = logging.StreamHandler(sys.stdout)
@@ -19,3 +18,11 @@ def send_message(chat, context, message):
         logger.info(f'Бот отпавил сообщение: {message}')
     except Exception as error:
         logger.error(f'Ошибка отправки сообщения: {error}')
+
+
+def send_cat(chat, context, image):
+    try:
+        context.bot.send_photo(chat_id=chat.id, photo=image)
+        logger.info('Бот отправил фото')
+    except Exception as error:
+        logger.error(f'Ошибка отправки фото: {error}')
