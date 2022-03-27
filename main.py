@@ -14,7 +14,8 @@ secret_token = os.getenv('API_TOKEN')
 def main():
     updater = Updater(token=secret_token)
     updater.dispatcher.add_handler(CommandHandler('valutes', all_valutes))
-    updater.dispatcher.add_handler(CommandHandler('Мяк', cat_image))
+    updater.dispatcher.add_handler(
+        MessageHandler(Filters.text('Мяк'), cat_image))
     updater.dispatcher.add_handler(
         CommandHandler('currency', currency_rate_cb))
     updater.dispatcher.add_handler(MessageHandler(Filters.text, first_answer))
