@@ -1,18 +1,13 @@
 import logging
-import os
 import sys
 from datetime import datetime as dt
 from http import HTTPStatus
+import re
 
 import requests
-from dotenv import load_dotenv
-from telegram.ext import CommandHandler, Filters, MessageHandler, Updater
-
+from send_message import send_message
 from exceptions import (EmptyListException, InvalidApiExc, InvalidJsonExc,
-                        InvalidResponseExc, InvalidValuteExc)
-
-load_dotenv()
-secret_token = os.getenv('API_TOKEN')
+                        InvalidResponseExc, InvalidValuteExc, NotValuteExc)
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -30,20 +25,7 @@ VALUTE_LIST = [
     'NOK', 'PLN', 'RON', 'XDR', 'SGD', 'TJS', 'TRY', 'TMT', 'UZS',
     'UAH', 'CZK', 'SEK', 'CHF', 'ZAR', 'KRW', 'JPY'
 ]
-
-
-def first_answer(update, context):
-    chat = update.effective_chat
-    context.bot.send_message(chat_id=chat.id, text='Пока не умею отвечать')
-
-
-def send_message(chat, context, message):
-    """Отправка сообщения."""
-    try:
-        context.bot.send_message(chat_id=chat.id, text=message)
-        logger.info(f'Бот отпавил сообщение: {message}')
-    except Exception as error:
-        logger.error(f'Ошибка отправки сообщения: {error}')
+REG = r'\b[A-Za-z]{3}\b'
 
 
 def get_api_answer():
@@ -63,6 +45,7 @@ def get_api_answer():
 
 
 def all_valutes(update, context):
+    """Получение списка поддерживаемых валют."""
     chat = update.effective_chat
     response = get_api_answer()
     try:
@@ -90,6 +73,8 @@ def check_data(data, context):
     if not context:
         raise EmptyListException('Не указана валюта')
     charcode = context
+    if re.match(REG, charcode) is None:
+        raise NotValuteExc('Не соответствует CharCode')
     if charcode not in VALUTE_LIST:
         raise InvalidValuteExc(
             f'Валюта {charcode} некорректна или не поддерживается')
@@ -127,7 +112,7 @@ def parse_valute(currencies, context):
     return text
 
 
-def currency_rate(update, context):
+def currency_rate_cb(update, context):
     """Основная логика работы блока валюты ЦБ."""
     chat = update.effective_chat
     for i in range(len(context.args)):
@@ -142,22 +127,11 @@ def currency_rate(update, context):
                 f'{currency}'
             )
             send_message(chat, context, message)
+        except NotValuteExc as error:
+            logger.debug(f'Строка не является CharCode валюты: {error}')
         except (InvalidValuteExc, InvalidApiExc, Exception) as error:
             message = f'Ошибка: {error}'
             logger.error(f'Сбой в работе программы: {error}')
             send_message(chat, context, message)
         else:
             logger.debug('Успешный запрос - нет исключений')
-
-
-def main():
-    updater = Updater(token=secret_token)
-    updater.dispatcher.add_handler(CommandHandler('valutes', all_valutes))
-    updater.dispatcher.add_handler(CommandHandler('currency', currency_rate))
-    updater.dispatcher.add_handler(MessageHandler(Filters.text, first_answer))
-    updater.start_polling()
-    updater.idle()
-
-
-if __name__ == '__main__':
-    main()

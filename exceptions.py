@@ -1,17 +1,17 @@
 class InvalidApiExc(Exception):
-    """"Некорректный ответ API."""
+    """Некорректный ответ API."""
 
     pass
 
 
 class InvalidResponseExc(Exception):
-    """"Status_code != 200."""
+    """Status_code != 200."""
 
     pass
 
 
 class InvalidJsonExc(Exception):
-    """"Некорректное декодирование JSON."""
+    """Некорректное декодирование JSON."""
 
     pass
 
@@ -23,6 +23,12 @@ class EmptyListException(Exception):
 
 
 class InvalidValuteExc(Exception):
-    """"Некорректно указан CharCode валюты."""
+    """Некорректно указан CharCode валюты."""
+
+    pass
+
+
+class NotValuteExc(Exception):
+    """Некорректно указан CharCode валюты."""
 
     pass
