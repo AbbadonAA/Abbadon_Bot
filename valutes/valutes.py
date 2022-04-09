@@ -1,6 +1,6 @@
 import logging
 import sys
-from datetime import datetime as dt
+from datetime import datetime as dt, timedelta
 
 from send_message import send_message
 from valutes.dicts import V_MOEX_R
@@ -30,7 +30,8 @@ def currency_rate(update, context):
             currencies = check_data(response, context.args[i])
             currency = parse_valute(currencies, context.args[i])
             date = corr_date(response)
-            time = dt.now().strftime('%H:%M')
+            time = dt.now() + timedelta(hours=3)
+            time = time.strftime('%H:%M')
             var = variation_cb(currencies, context.args[i])
             if context.args[i] not in V_MOEX_R:
                 message = (
