@@ -16,7 +16,7 @@ def main():
     updater = Updater(token=secret_token)
     updater.dispatcher.add_handler(CommandHandler('valutes', all_valutes))
     updater.dispatcher.add_handler(
-        MessageHandler(Filters.text('Мяк'), cat_image))
+        MessageHandler(Filters.regex(r'\b[мякМЯК]{3}\b'), cat_image))
     updater.dispatcher.add_handler(
         CommandHandler('currency', currency_rate))
     updater.dispatcher.add_handler(MessageHandler(Filters.text, first_answer))
