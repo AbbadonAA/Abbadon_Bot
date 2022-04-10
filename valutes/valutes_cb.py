@@ -76,7 +76,9 @@ def corr_date(response):
 def parse_valute(currencies, context):
     """Получение курса валюты и подготовка сообщения."""
     currency = currencies.get(context)
+    nominal = currency.get('Nominal')
     value = currency.get('Value')
+    value = value / nominal
     value_round = round(value, 2)
     text = f'{value_round:.2f}'
     return text
@@ -85,7 +87,10 @@ def parse_valute(currencies, context):
 def variation_cb(currencies, context):
     """Вывод отклонения курса ЦБ от вчерашнего."""
     currency = currencies.get(context)
+    nominal = currency.get('Nominal')
     value = currency.get('Value')
+    value = value / nominal
     pr_value = currency.get('Previous')
+    pr_value = pr_value / nominal
     var = round(value - pr_value, 3)
     return var

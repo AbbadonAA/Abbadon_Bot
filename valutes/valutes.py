@@ -27,25 +27,26 @@ def currency_rate(update, context):
         try:
             logger.debug('Отправка запроса к API')
             response = get_api_answer()
-            currencies = check_data(response, context.args[i])
-            currency = parse_valute(currencies, context.args[i])
+            charcode = context.args[i].upper()
+            currencies = check_data(response, charcode)
+            currency = parse_valute(currencies, charcode)
             date = corr_date(response)
             time = dt.now() + timedelta(hours=3)
             time = time.strftime('%H:%M')
-            var = variation_cb(currencies, context.args[i])
-            if context.args[i] not in V_MOEX_R:
+            var = variation_cb(currencies, charcode)
+            if charcode not in V_MOEX_R:
                 message = (
-                    f'Курс {context.args[i]}:\n'
+                    f'Курс {charcode}:\n'
                     f'ЦБ РФ (на {date}): {currency} RUB ({var})'
                 )
                 send_message(chat, context, message)
             else:
-                moex_now = get_moex_currency_rate(context.args[i], 'LAST')
-                moex_open = get_moex_currency_rate(context.args[i], 'OPEN')
+                moex_now = get_moex_currency_rate(charcode, 'LAST')
+                moex_open = get_moex_currency_rate(charcode, 'OPEN')
                 var_mo = float(moex_now) - float(moex_open)
                 var_round = f'{var_mo:.2f}'
                 message = (
-                    f'Курс {context.args[i]}:\n'
+                    f'Курс {charcode}:\n'
                     f'ЦБ РФ (на {date}): {currency} RUB ({var})\n'
                     f'MOEX  (на {time}): {moex_now} RUB ({var_round})'
                 )
