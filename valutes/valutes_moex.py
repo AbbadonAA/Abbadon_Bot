@@ -30,7 +30,7 @@ MOEX_URL = ("https://iss.moex.com/iss/engines/currency/markets/selt/"
             "callback=angular.callbacks._gk")
 
 
-def get_moex_answer():
+def get_moex_answer(mark_sec):
     """Получение и обработка данных от MOEX."""
     try:
         response = requests.get(MOEX_URL)
@@ -44,23 +44,29 @@ def get_moex_answer():
         data = response.text[22:len(response.text)-1]
         data = re.sub(r'\n', "", data)
         data = json.loads(data)
-        data = data[1].get('marketdata')
+        data = data[1].get(mark_sec)
     except Exception as error:
         raise InvalidJsonExc(f'Ошибка формирования JSON: {error}')
     return data
 
 
-def moex_currency_dict(moment):
+def moex_currency_dict(moment, mark_sec):
     """Формирование словаря валют и курсов."""
     currencies = {}
-    for data in get_moex_answer():
-        if data.get(moment):
+    for data in get_moex_answer(mark_sec):
+        if data.get(moment) is not None:
             currencies[V_MOEX[data.get('SECID')][0]] = str(data.get(moment))
     return currencies
 
 
 def get_moex_currency_rate(valute, moment):
     """Возврат курса для конкретной валюты."""
-    currency = moex_currency_dict(moment)[valute]
+    try:
+        mark_sec = 'marketdata'
+        currency = moex_currency_dict(moment, mark_sec)[valute]
+    except Exception:
+        mark_sec = 'securities'
+        alt_moment = 'PREVPRICE'
+        currency = moex_currency_dict(alt_moment, mark_sec)[valute]
     currency_round = round(float(currency), 2)
     return f'{currency_round:.2f}'
