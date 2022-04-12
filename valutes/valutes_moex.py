@@ -21,7 +21,7 @@ logger.addHandler(handler)
 
 MOEX_URL = ("https://iss.moex.com/iss/engines/currency/markets/selt/"
             "securities.jsonp?"
-            "iss.only=marketdata&"
+            "iss.only=securities,marketdata&"
             f"securities={V_MOEX_R['USD']},{V_MOEX_R['EUR']},"
             f"{V_MOEX_R['GBP']},{V_MOEX_R['CHF']},{V_MOEX_R['CNY']},"
             f"{V_MOEX_R['JPY']},{V_MOEX_R['KZT']},{V_MOEX_R['TRY']},"
@@ -44,7 +44,7 @@ def get_moex_answer(mark_sec):
         data = response.text[22:len(response.text)-1]
         data = re.sub(r'\n', "", data)
         data = json.loads(data)
-        data = data[1].get(mark_sec)
+        data = data[1][mark_sec]
     except Exception as error:
         raise InvalidJsonExc(f'Ошибка формирования JSON: {error}')
     return data
@@ -64,9 +64,12 @@ def get_moex_currency_rate(valute, moment):
     try:
         mark_sec = 'marketdata'
         currency = moex_currency_dict(moment, mark_sec)[valute]
+        if currency:
+            currency_round = round(float(currency), 2)
+            return f'{currency_round:.2f}'
     except Exception:
         mark_sec = 'securities'
         alt_moment = 'PREVPRICE'
         currency = moex_currency_dict(alt_moment, mark_sec)[valute]
-    currency_round = round(float(currency), 2)
-    return f'{currency_round:.2f}'
+        currency_round = round(float(currency), 2)
+        return f'{currency_round:.2f}'
