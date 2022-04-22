@@ -32,3 +32,9 @@ class NotValuteExc(Exception):
     """Некорректно указан CharCode валюты."""
 
     pass
+
+
+class InvalidType(Exception):
+    """Некорректный тип данных."""
+
+    pass

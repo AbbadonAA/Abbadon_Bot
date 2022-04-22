@@ -1,14 +1,13 @@
 import logging
 import sys
-from datetime import datetime as dt, timedelta
+from datetime import datetime as dt
+from datetime import timedelta
 
 from send_message import send_message
 from valutes.dicts import V_MOEX_R
 from valutes.exceptions import InvalidApiExc, InvalidValuteExc, NotValuteExc
-from valutes.valutes_cb import (check_data, corr_date, get_api_answer,
-                                parse_valute, variation_cb)
+from valutes.valutes_cb_xml import (corr_date, get_api_answer, parse_valute)
 from valutes.valutes_moex import get_moex_currency_rate
-
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -19,6 +18,9 @@ formatter = logging.Formatter(
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 
+TODAY = dt.today()
+YESTERDAY = TODAY - timedelta(days=1)
+
 
 def currency_rate(update, context):
     """Основная логика работы блока валюты."""
@@ -26,18 +28,19 @@ def currency_rate(update, context):
     for i in range(len(context.args)):
         try:
             logger.debug('Отправка запроса к API')
-            response = get_api_answer()
             charcode = context.args[i].upper()
-            currencies = check_data(response, charcode)
-            currency = parse_valute(currencies, charcode)
-            date = corr_date(response)
+            response_last = get_api_answer(TODAY)
+            response_prev = get_api_answer(YESTERDAY)
+            currency_tod = parse_valute(response_last, charcode)
+            currency_prev = parse_valute(response_prev, charcode)
+            var = currency_tod - currency_prev
+            date = corr_date(response_last)
             time = dt.now() + timedelta(hours=3)
             time = time.strftime('%H:%M')
-            var = variation_cb(currencies, charcode)
             if charcode not in V_MOEX_R:
                 message = (
                     f'Курс {charcode}:\n'
-                    f'ЦБ РФ (на {date}): {currency} RUB ({var})'
+                    f'ЦБ РФ (на {date}): {currency_tod:.2f} RUB ({var:.2f})'
                 )
                 send_message(chat, context, message)
             else:
@@ -47,7 +50,7 @@ def currency_rate(update, context):
                 var_round = f'{var_mo:.2f}'
                 message = (
                     f'Курс {charcode}:\n'
-                    f'ЦБ РФ (на {date}): {currency} RUB ({var})\n'
+                    f'ЦБ РФ (на {date}): {currency_tod:.2f} RUB ({var:.2f})\n'
                     f'MOEX  (на {time}): {moex_now} RUB ({var_round})'
                 )
                 send_message(chat, context, message)
@@ -68,7 +71,7 @@ def currency_rate(update, context):
 def all_valutes(update, context):
     """Получение списка поддерживаемых валют."""
     chat = update.effective_chat
-    response = get_api_answer()
+    response = get_api_answer(TODAY)
     try:
         valutes = response.get('Valute').keys()
     except Exception as error:
