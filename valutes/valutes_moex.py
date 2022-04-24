@@ -60,15 +60,18 @@ def moex_currency_dict(moment, mark_sec):
 
 def get_moex_currency_rate(valute, moment):
     """Возврат курса для конкретной валюты."""
+    facevalue = 1
+    if valute == 'JPY' or valute == 'KZT':
+        facevalue = 100
     try:
         mark_sec = 'marketdata'
         currency = moex_currency_dict(moment, mark_sec)[valute]
         if currency:
-            currency_round = round(float(currency), 2)
-            return f'{currency_round:.2f}'
+            currency_round = round(float(currency) / facevalue, 3)
+            return f'{currency_round:.3f}'
     except Exception:
         mark_sec = 'securities'
         alt_moment = 'PREVPRICE'
         currency = moex_currency_dict(alt_moment, mark_sec)[valute]
-        currency_round = round(float(currency), 2)
-        return f'{currency_round:.2f}'
+        currency_round = round(float(currency) / facevalue, 3)
+        return f'{currency_round:.3f}'

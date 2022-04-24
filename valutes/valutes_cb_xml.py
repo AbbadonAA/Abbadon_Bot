@@ -9,7 +9,7 @@ import requests
 import xmltodict
 
 from valutes.dicts import VALUTE_LIST
-from valutes.exceptions import (EmptyListException, InvalidApiExc,
+from valutes.exceptions import (EmptyListException, InvalidApiExc, InvalidDate,
                                 InvalidJsonExc, InvalidResponseExc,
                                 InvalidType, InvalidValuteExc, NotValuteExc)
 
@@ -24,6 +24,15 @@ logger.addHandler(handler)
 
 REG = r'\b[A-Za-z]{3}\b'
 CB_URL = 'https://cbr.ru/scripts/XML_daily.asp'
+REG_DATE = r'\b(0[1-9]|[12][0-9]|3[0-1])[.](0[1-9]|1[0-2])[.](19|20)\d\d\b'
+
+
+def date_args(date):
+    """Перевод даты из context.args в корректный формат."""
+    if re.match(REG_DATE, date) is None:
+        raise InvalidDate(
+            'Дата должна быть в формате dd.mm.yyyy')
+    return dt.strptime(date, '%d.%m.%Y')
 
 
 def url_for_date(dt_time):
@@ -52,6 +61,11 @@ def make_json(data):
 
 def get_api_answer(date=dt.today()):
     """Проверка успешности запроса к API."""
+    min_date = dt.strptime('01.07.1992', '%d.%m.%Y')
+    if date < min_date:
+        raise InvalidDate('Начало отсчета 01.07.1992')
+    if date > dt.today():
+        date = dt.today()
     try:
         response = requests.get(url_for_date(date))
     except Exception as error:

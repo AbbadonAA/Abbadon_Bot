@@ -38,3 +38,9 @@ class InvalidType(Exception):
     """Некорректный тип данных."""
 
     pass
+
+
+class InvalidDate(Exception):
+    """Некорректная дата для валют ЦБ."""
+
+    pass

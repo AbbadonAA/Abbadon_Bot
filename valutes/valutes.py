@@ -5,8 +5,10 @@ from datetime import timedelta
 
 from send_message import send_message
 from valutes.dicts import V_MOEX_R
-from valutes.exceptions import InvalidApiExc, InvalidValuteExc, NotValuteExc
-from valutes.valutes_cb_xml import corr_date, get_api_answer, parse_valute
+from valutes.exceptions import (InvalidApiExc, InvalidDate, InvalidValuteExc,
+                                NotValuteExc)
+from valutes.valutes_cb_xml import (corr_date, date_args, get_api_answer,
+                                    parse_valute)
 from valutes.valutes_moex import get_moex_currency_rate
 
 logger = logging.getLogger(__name__)
@@ -40,7 +42,7 @@ def currency_rate(update, context):
             if charcode not in V_MOEX_R:
                 message = (
                     f'Курс {charcode}:\n'
-                    f'ЦБ РФ (на {date}): {currency_tod:.2f} RUB ({var:.2f})'
+                    f'ЦБ РФ (на {date}): {currency_tod:.3f} RUB ({var:.3f})'
                 )
                 send_message(chat, context, message)
             else:
@@ -50,7 +52,7 @@ def currency_rate(update, context):
                 var_round = f'{var_mo:.2f}'
                 message = (
                     f'Курс {charcode}:\n'
-                    f'ЦБ РФ (на {date}): {currency_tod:.2f} RUB ({var:.2f})\n'
+                    f'ЦБ РФ (на {date}): {currency_tod:.3f} RUB ({var:.3f})\n'
                     f'MOEX  (на {time}): {moex_now} RUB ({var_round})'
                 )
                 send_message(chat, context, message)
@@ -69,22 +71,35 @@ def currency_rate(update, context):
 
 
 def all_valutes(update, context):
-    """Получение списка поддерживаемых валют."""
+    """Получение списка валют и курсов ЦБ на дату."""
     chat = update.effective_chat
-    response = get_api_answer(TODAY)
     try:
+        date = date_args(context.args[0])
+        response = get_api_answer(date)
         valutes = response.get('Valute').keys()
+        valutes_name = response.get('Valute')
+    except InvalidDate as error:
+        logger.info(f'Ошибка в дате: {error}')
+        message = f'{error}'
+        send_message(chat, context, message)
     except Exception as error:
         logger.error(f'Получение ключей Valute: {error}')
         raise InvalidApiExc(f'Некорректный ответ API - {error}')
-    valutes_name = response.get('Valute')
-    message_list = []
-    for valute in valutes:
-        try:
-            name = valutes_name.get(valute).get('Name')
-        except Exception as error:
-            logger.error(f'Не получен Name валюты: {error}')
-            raise InvalidApiExc(f'Проблемы с получением Name: {error}')
-        message_list.append(f'{valute} - {name}')
+    else:
+        message_list = []
+        for valute in valutes:
+            try:
+                name = valutes_name.get(valute).get('Name')
+                value = valutes_name.get(valute).get('Value')
+                nominal = valutes_name.get(valute).get('Nominal')
+                value = value.replace(',', '.')
+                value = float(value) / float(nominal)
+            except Exception as error:
+                logger.error(f'Ошибка в Name or Value: {error}')
+                raise InvalidApiExc(f'Проблемы с Name or Value: {error}')
+            else:
+                message_list.append(f'{valute} - {name} - {value:.2f}')
     message = '\n'.join(message_list)
+    date = date.strftime('%d.%m.%Y')
+    message = f'Курсы валют на {date}:\n{message}'
     send_message(chat, context, message)
