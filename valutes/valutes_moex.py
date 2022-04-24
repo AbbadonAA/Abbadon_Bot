@@ -41,13 +41,12 @@ def get_moex_answer(mark_sec):
         logger.error(f'Ответ MOEX: {status}')
         raise InvalidResponseExc(f'status_code: {status}')
     try:
-        data = response.text[22:len(response.text)-1]
+        data = response.text[22:len(response.text) - 1]
         data = re.sub(r'\n', "", data)
         data = json.loads(data)
-        data = data[1][mark_sec]
     except Exception as error:
         raise InvalidJsonExc(f'Ошибка формирования JSON: {error}')
-    return data
+    return data[1][mark_sec]
 
 
 def moex_currency_dict(moment, mark_sec):

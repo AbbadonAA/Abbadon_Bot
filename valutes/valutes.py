@@ -6,7 +6,7 @@ from datetime import timedelta
 from send_message import send_message
 from valutes.dicts import V_MOEX_R
 from valutes.exceptions import InvalidApiExc, InvalidValuteExc, NotValuteExc
-from valutes.valutes_cb_xml import (corr_date, get_api_answer, parse_valute)
+from valutes.valutes_cb_xml import corr_date, get_api_answer, parse_valute
 from valutes.valutes_moex import get_moex_currency_rate
 
 logger = logging.getLogger(__name__)

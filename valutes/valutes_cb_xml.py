@@ -33,8 +33,7 @@ def url_for_date(dt_time):
     date = dt_time.date()
     corr_date = date.strftime('%d/%m/%Y')
     url_add = f'?date_req={corr_date}'
-    url_for_date = CB_URL + url_add
-    return url_for_date
+    return CB_URL + url_add
 
 
 def make_json(data):
@@ -81,10 +80,9 @@ def check_data(data, context):
         raise InvalidValuteExc(
             f'Валюта {charcode} некорректна или не поддерживается')
     try:
-        data = data.get('Valute')
+        return data.get('Valute')
     except Exception as error:
         raise InvalidApiExc(f'Не получены данные Valute: {error}')
-    return data
 
 
 def corr_date(response):
@@ -93,8 +91,7 @@ def corr_date(response):
         raise InvalidApiExc('Некорректный ответ API - Отсутствует Date')
     date = response.get('@Date')
     date = dt.strptime(date, '%d.%m.%Y')
-    date = date.strftime('%d.%m')
-    return date
+    return date.strftime('%d.%m')
 
 
 def parse_valute(data, context):
@@ -104,5 +101,4 @@ def parse_valute(data, context):
     nominal = currency.get('Nominal').replace(',', '.')
     value = currency.get('Value').replace(',', '.')
     value = float(value) / float(nominal)
-    value_round = round(value, 3)
-    return value_round
+    return round(value, 3)
