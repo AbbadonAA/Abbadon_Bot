@@ -7,7 +7,8 @@ from kitty import cat_image
 from random_answer import first_answer
 from valutes.valutes import all_valutes, currency_rate
 
-load_dotenv()
+path = '/home/abbadon/dev/Abbadon_Bot/infra/.env'
+load_dotenv(path)
 secret_token = os.getenv('API_TOKEN')
 # secret_token = os.getenv('API_TEST')
 
