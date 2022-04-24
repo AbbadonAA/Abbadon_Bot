@@ -61,10 +61,10 @@ jobs:
         script: |
           cd bot/infra/
           sudo docker-compose stop bot
-          sudo docker-compose rm bot
+          echo y|sudo docker-compose rm bot
           touch .env
-          echo API_TOKEN=${{ secrets.API_TOKEN }} > .env
-          echo API_TEST=${{ secrets.API_TEST }} > .env
+          echo API_TOKEN=${{ secrets.API_TOKEN }} >> .env
+          echo API_TEST=${{ secrets.API_TEST }} >> .env
           sudo docker-compose up -d
 
   send_message:
