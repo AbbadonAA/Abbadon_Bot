@@ -62,6 +62,7 @@ jobs:
           cd bot/infra/
           sudo docker-compose stop bot
           echo y|sudo docker-compose rm bot
+          sudo docker rmi abbadon666666/a_bot:latest
           touch .env
           echo API_TOKEN=${{ secrets.API_TOKEN }} >> .env
           echo API_TEST=${{ secrets.API_TEST }} >> .env
