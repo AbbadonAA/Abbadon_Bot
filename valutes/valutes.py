@@ -20,7 +20,7 @@ formatter = logging.Formatter(
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 
-TODAY = dt.today() + timedelta(hours=3)
+TODAY = dt.now() + timedelta(hours=3)
 YESTERDAY = TODAY - timedelta(days=1)
 
 
@@ -102,7 +102,7 @@ def all_valutes(update, context):
                 raise InvalidApiExc(f'Проблемы с Name or Value: {error}')
             else:
                 message_list.append(f'{valute} - {name} - {value:.2f}')
-    message = '\n'.join(message_list)
-    date = response.get('@Date')
-    message = f'Курсы валют на {date}:\n{message}'
-    send_message(chat, context, message)
+        message = '\n'.join(message_list)
+        date = response.get('@Date')
+        message = f'Курсы валют на {date}:\n{message}'
+        send_message(chat, context, message)

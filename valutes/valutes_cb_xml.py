@@ -59,13 +59,13 @@ def make_json(data):
     return json_all
 
 
-def get_api_answer(date=dt.today()):
+def get_api_answer(date=dt.now()):
     """Проверка успешности запроса к API."""
     min_date = dt.strptime('01.07.1992', '%d.%m.%Y')
     if date < min_date:
         raise InvalidDate('Начало отсчета 01.07.1992')
-    if date > dt.today():
-        date = dt.today()
+    if date > dt.now():
+        date = dt.now()
     try:
         response = requests.get(url_for_date(date))
     except Exception as error:
