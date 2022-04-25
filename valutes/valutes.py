@@ -37,7 +37,7 @@ def currency_rate(update, context):
             currency_prev = parse_valute(response_prev, charcode)
             var = currency_tod - currency_prev
             date = corr_date(response_last)
-            time = dt.now() + timedelta(hours=3)
+            time = TODAY
             time = time.strftime('%H:%M')
             if charcode not in V_MOEX_R:
                 message = (

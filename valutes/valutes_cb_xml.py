@@ -3,6 +3,7 @@ import logging
 import re
 import sys
 from datetime import datetime as dt
+from datetime import timedelta
 from http import HTTPStatus
 
 import requests
@@ -22,6 +23,7 @@ formatter = logging.Formatter(
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 
+TODAY = dt.now() + timedelta(hours=3)
 REG = r'\b[A-Za-z]{3}\b'
 CB_URL = 'https://cbr.ru/scripts/XML_daily.asp'
 REG_DATE = r'\b(0[1-9]|[12][0-9]|3[0-1])[.](0[1-9]|1[0-2])[.](19|20)\d\d\b'
@@ -32,15 +34,14 @@ def date_args(date):
     if re.match(REG_DATE, date) is None:
         raise InvalidDate(
             'Дата должна быть в формате dd.mm.yyyy')
-    return dt.strptime(date, '%d.%m.%Y')
+    return dt.strptime(date, '%d.%m.%Y') + timedelta(hours=3)
 
 
 def url_for_date(dt_time):
     """Формирование корректного URL к API ЦБ."""
     if not isinstance(dt_time, dt):
         raise InvalidType('Неверный формат даты')
-    date = dt_time.date()
-    corr_date = date.strftime('%d/%m/%Y')
+    corr_date = dt_time.strftime('%d/%m/%Y')
     url_add = f'?date_req={corr_date}'
     return CB_URL + url_add
 
@@ -59,13 +60,13 @@ def make_json(data):
     return json_all
 
 
-def get_api_answer(date=dt.now()):
+def get_api_answer(date=TODAY):
     """Проверка успешности запроса к API."""
     min_date = dt.strptime('01.07.1992', '%d.%m.%Y')
     if date < min_date:
         raise InvalidDate('Начало отсчета 01.07.1992')
-    if date > dt.now():
-        date = dt.now()
+    if date > TODAY:
+        date = TODAY
     try:
         response = requests.get(url_for_date(date))
     except Exception as error:
