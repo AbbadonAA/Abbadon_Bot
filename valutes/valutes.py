@@ -20,7 +20,7 @@ formatter = logging.Formatter(
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 
-TODAY = dt.today()
+TODAY = dt.today() + timedelta(hours=3)
 YESTERDAY = TODAY - timedelta(days=1)
 
 
@@ -74,7 +74,10 @@ def all_valutes(update, context):
     """Получение списка валют и курсов ЦБ на дату."""
     chat = update.effective_chat
     try:
-        date = date_args(context.args[0])
+        if not context.args:
+            date = TODAY
+        else:
+            date = date_args(context.args[0])
         response = get_api_answer(date)
         valutes = response.get('Valute').keys()
         valutes_name = response.get('Valute')
@@ -100,6 +103,6 @@ def all_valutes(update, context):
             else:
                 message_list.append(f'{valute} - {name} - {value:.2f}')
     message = '\n'.join(message_list)
-    date = date.strftime('%d.%m.%Y')
+    date = response.get('@Date')
     message = f'Курсы валют на {date}:\n{message}'
     send_message(chat, context, message)
