@@ -4,5 +4,7 @@ services:
   bot:
     image: abbadon666666/a_bot:latest
     restart: always
+    environment:
+      - TZ=Europe/Moscow
     env_file:
       - ./.env
