@@ -3,7 +3,6 @@ import logging
 import re
 import sys
 from datetime import datetime as dt
-from datetime import timedelta
 from http import HTTPStatus
 
 import requests
@@ -23,7 +22,6 @@ formatter = logging.Formatter(
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 
-TODAY = dt.now() + timedelta(hours=3)
 REG = r'\b[A-Za-z]{3}\b'
 CB_URL = 'https://cbr.ru/scripts/XML_daily.asp'
 REG_DATE = r'\b(0[1-9]|[12][0-9]|3[0-1])[.](0[1-9]|1[0-2])[.](19|20)\d\d\b'
@@ -34,7 +32,7 @@ def date_args(date):
     if re.match(REG_DATE, date) is None:
         raise InvalidDate(
             'Дата должна быть в формате dd.mm.yyyy')
-    return dt.strptime(date, '%d.%m.%Y') + timedelta(hours=3)
+    return dt.strptime(date, '%d.%m.%Y')
 
 
 def url_for_date(dt_time):
@@ -60,13 +58,13 @@ def make_json(data):
     return json_all
 
 
-def get_api_answer(date=TODAY):
+def get_api_answer(date=dt.now()):
     """Проверка успешности запроса к API."""
     min_date = dt.strptime('01.07.1992', '%d.%m.%Y')
     if date < min_date:
         raise InvalidDate('Начало отсчета 01.07.1992')
-    if date > TODAY:
-        date = TODAY
+    if date > dt.now():
+        date = dt.now()
     try:
         response = requests.get(url_for_date(date))
     except Exception as error:

@@ -20,9 +20,6 @@ formatter = logging.Formatter(
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 
-TODAY = dt.now() + timedelta(hours=3)
-YESTERDAY = TODAY - timedelta(days=1)
-
 
 def currency_rate(update, context):
     """Основная логика работы блока валюты."""
@@ -30,15 +27,16 @@ def currency_rate(update, context):
     for i in range(len(context.args)):
         try:
             logger.debug('Отправка запроса к API')
+            today = dt.now()
+            yesterday = today - timedelta(days=1)
+            response_last = get_api_answer(today)
+            response_prev = get_api_answer(yesterday)
             charcode = context.args[i].upper()
-            response_last = get_api_answer(TODAY)
-            response_prev = get_api_answer(YESTERDAY)
             currency_tod = parse_valute(response_last, charcode)
             currency_prev = parse_valute(response_prev, charcode)
             var = currency_tod - currency_prev
             date = corr_date(response_last)
-            time = TODAY
-            time = time.strftime('%H:%M')
+            time = today.strftime('%H:%M')
             if charcode not in V_MOEX_R:
                 message = (
                     f'Курс {charcode}:\n'
@@ -75,7 +73,7 @@ def all_valutes(update, context):
     chat = update.effective_chat
     try:
         if not context.args:
-            date = TODAY
+            date = dt.now()
         else:
             date = date_args(context.args[0])
         response = get_api_answer(date)
