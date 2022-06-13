@@ -47,7 +47,7 @@ def currency_rate(update, context):
                 moex_now = get_moex_currency_rate(charcode, 'LAST')
                 moex_open = get_moex_currency_rate(charcode, 'OPEN')
                 var_mo = float(moex_now) - float(moex_open)
-                var_round = f'{var_mo:.2f}'
+                var_round = f'{var_mo:.3f}'
                 message = (
                     f'Курс {charcode}:\n'
                     f'ЦБ РФ (на {date}): {currency_tod:.3f} RUB ({var:.3f})\n'
