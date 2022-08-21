@@ -43,7 +43,7 @@ jobs:
         tags: abbadon666666/a_bot:latest
 
   deploy:
-    name: Deploy YCloud
+    name: Deploy MyServer
     runs-on: ubuntu-latest
     needs: build_and_push
     if:
@@ -58,7 +58,7 @@ jobs:
         username: ${{ secrets.USER }}
         key: ${{ secrets.SSH_KEY }}
         script: |
-          cd root/bot/infra/
+          cd bot/infra/
           sudo docker-compose stop bot
           echo y|sudo docker-compose rm bot
           sudo docker rmi abbadon666666/a_bot:latest
