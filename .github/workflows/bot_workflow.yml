@@ -59,7 +59,7 @@ jobs:
         username: ${{ secrets.USER }}
         key: ${{ secrets.SSH_KEY }}
         script: |
-          cd bot/infra/
+          cd root/bot/infra/
           sudo docker-compose stop bot
           echo y|sudo docker-compose rm bot
           sudo docker rmi abbadon666666/a_bot:latest
